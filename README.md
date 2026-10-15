@@ -18,7 +18,9 @@ npm ci
 npx playwright install chromium        # first time only
 npm start                              # booking site at http://localhost:3000
 
-./run_pipeline.sh                              # clean build        → RELEASE GATE: SHIP
+npm run demo                                   # clean build → RELEASE GATE: SHIP (Windows/macOS/Linux)
+npm run demo -- promo_stack                    # inject a defect → BLOCK
+./run_pipeline.sh                              # same pipeline in bash
 DEMO_BUG=promo_stack ./run_pipeline.sh         # promo applied twice → BLOCK
 DEMO_BUG=no_taxes ./run_pipeline.sh            # taxes dropped       → BLOCK
 DEMO_BUG=payment_down ./run_pipeline.sh        # gateway outage      → BLOCK

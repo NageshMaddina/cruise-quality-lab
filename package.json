@@ -13,7 +13,8 @@
     "ai:select": "node tools/risk-select.js",
     "ai:triage": "node tools/triage.js",
     "gate": "node tools/gate.js",
-    "demo": "bash run_pipeline.sh"
+    "demo": "node tools/pipeline.js",
+    "demo:bug": "node tools/pipeline.js promo_stack"
   },
   "license": "ISC",
   "dependencies": {
