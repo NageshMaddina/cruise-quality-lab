@@ -1,0 +1,9 @@
+[
+  {
+    "_example": "A P2 requirement may ship failing only with a written exception: owner, reason, expiry. P1 requirements can never be waived here.",
+    "requirement": "REQ-EXAMPLE-00",
+    "owner": "Product owner + QA lead",
+    "reason": "Example entry; has no effect",
+    "expires": "2026-01-01"
+  }
+]

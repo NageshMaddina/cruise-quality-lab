@@ -1,0 +1,77 @@
+name: Quality gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      demo_bug:
+        description: 'Inject a demo defect (promo_stack, no_taxes, payment_down) to watch the gate block'
+        required: false
+        default: ''
+
+jobs:
+  fast-checks:
+    name: Fast checks (unit, API, contract)
+    runs-on: ubuntu-latest
+    env:
+      DEMO_BUG: ${{ github.event.inputs.demo_bug }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Risk-based selection (what this change puts at risk)
+        run: node tools/risk-select.js | tee -a "$GITHUB_STEP_SUMMARY"
+      - run: mkdir -p results && npx jest --json --outputFile=results/jest.json
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        with: { name: jest-results, path: results/jest.json }
+
+  e2e:
+    name: E2E journeys (desktop + mobile, a11y)
+    runs-on: ubuntu-latest
+    env:
+      CI: 'true'
+      DEMO_BUG: ${{ github.event.inputs.demo_bug }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: e2e-results, path: results/ }
+
+  gate:
+    name: Release gate
+    needs: [fast-checks, e2e]
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}  # optional: enables Claude triage
+      DEMO_BUG: ${{ github.event.inputs.demo_bug }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with: { name: jest-results, path: results }
+      - uses: actions/download-artifact@v4
+        with: { name: e2e-results, path: results }
+      - run: node tools/triage.js
+      - name: Gate decision
+        run: |
+          set +e
+          node tools/gate.js | tee gate.log
+          code=${PIPESTATUS[0]}
+          echo '```' >> "$GITHUB_STEP_SUMMARY"; cat gate.log >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: quality-dashboard, path: results/dashboard.html }

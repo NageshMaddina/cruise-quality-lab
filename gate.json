@@ -1,0 +1,8 @@
+{
+  "_comment": "Release gate policy. Business rules first: any failing or untested P1 guest journey blocks the release.",
+  "blockOnP1Failure": true,
+  "requireP1Coverage": true,
+  "minOverallPassRate": 98,
+  "maxFlakyTests": 2,
+  "maxE2eMinutes": 10
+}

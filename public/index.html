@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seaward Voyages – Book a Cruise (QA demo)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">Seaward Voyages</div>
+    <div class="tag">Fictional booking site for a quality engineering demo</div>
+  </header>
+
+  <main>
+    <ol class="steps" aria-label="Booking progress">
+      <li data-step="search" class="active">Search</li>
+      <li data-step="cabin">Cabin</li>
+      <li data-step="checkout">Guest &amp; payment</li>
+      <li data-step="confirm">Confirmation</li>
+    </ol>
+
+    <section id="search" class="panel" aria-labelledby="search-h">
+      <h1 id="search-h">Find your cruise</h1>
+      <form id="search-form" class="row">
+        <label>Destination
+          <select id="destination" name="destination" data-testid="destination">
+            <option value="">Any</option>
+            <option>Caribbean</option><option>Alaska</option><option>Mediterranean</option><option>Mexico</option>
+          </select>
+        </label>
+        <label>Max price per guest (USD)
+          <input id="maxPrice" name="maxPrice" type="number" min="0" step="50" placeholder="Any">
+        </label>
+        <button type="submit" data-testid="search-btn">Search cruises</button>
+      </form>
+      <p id="result-count" role="status" aria-live="polite"></p>
+      <ul id="results" class="cards" data-testid="results"></ul>
+    </section>
+
+    <section id="cabin" class="panel" hidden aria-labelledby="cabin-h">
+      <h2 id="cabin-h">Choose your cabin</h2>
+      <p id="cruise-title" class="muted"></p>
+      <form id="cabin-form">
+        <fieldset>
+          <legend>Cabin type</legend>
+          <div id="cabin-options" class="cabins"></div>
+        </fieldset>
+        <div class="row">
+          <label>Guests
+            <select id="guests" data-testid="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+          </label>
+          <label>Promo code
+            <input id="promo" data-testid="promo" autocomplete="off" placeholder="e.g. SAIL10">
+          </label>
+          <button type="button" id="quote-btn" data-testid="quote-btn">Get price</button>
+        </div>
+      </form>
+      <p id="quote-error" class="error" role="alert" data-testid="quote-error"></p>
+      <table id="quote" class="quote" hidden data-testid="quote">
+        <caption>Price summary</caption>
+        <tbody>
+          <tr><th scope="row">Cruise fare</th><td id="q-fare"></td></tr>
+          <tr><th scope="row">Promotion</th><td id="q-discount"></td></tr>
+          <tr><th scope="row">Taxes</th><td id="q-taxes"></td></tr>
+          <tr><th scope="row">Port fees</th><td id="q-port"></td></tr>
+          <tr class="total"><th scope="row">Total</th><td id="q-total" data-testid="quote-total"></td></tr>
+        </tbody>
+      </table>
+      <div class="actions">
+        <button type="button" class="secondary" data-back="search">Back</button>
+        <button type="button" id="to-checkout" data-testid="to-checkout" disabled>Continue to checkout</button>
+      </div>
+    </section>
+
+    <section id="checkout" class="panel" hidden aria-labelledby="checkout-h">
+      <h2 id="checkout-h">Guest and payment</h2>
+      <form id="checkout-form" novalidate>
+        <div class="row">
+          <label>First name <input id="firstName" autocomplete="given-name" required data-testid="first-name"></label>
+          <label>Last name <input id="lastName" autocomplete="family-name" required data-testid="last-name"></label>
+          <label>Email <input id="email" type="email" autocomplete="email" required data-testid="email"></label>
+        </div>
+        <div class="row">
+          <label>Card number (test cards only) <input id="card" inputmode="numeric" autocomplete="off" required data-testid="card"></label>
+        </div>
+        <p class="muted small">Test cards: 4242 4242 4242 4242 approves · 4000 0000 0000 0002 declines · 4000 0000 0000 9995 gateway timeout</p>
+        <p id="pay-total" class="paytotal"></p>
+        <p id="pay-error" class="error" role="alert" data-testid="pay-error"></p>
+        <div class="actions">
+          <button type="button" class="secondary" data-back="cabin">Back</button>
+          <button type="submit" id="pay-btn" data-testid="pay-btn">Pay and book</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="confirm" class="panel" hidden aria-labelledby="confirm-h">
+      <h2 id="confirm-h">You're booked!</h2>
+      <p>Confirmation number <strong id="booking-id" data-testid="booking-id"></strong></p>
+      <p id="confirm-summary" data-testid="confirm-summary"></p>
+      <button type="button" id="new-search">Plan another cruise</button>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

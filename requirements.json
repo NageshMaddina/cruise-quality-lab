@@ -1,0 +1,16 @@
+[
+  { "id": "REQ-SEARCH-01", "journey": "search", "priority": "P1", "title": "Search by destination", "acceptance": "Given sailings exist, when a guest searches by destination, then only sailings to that destination are returned with ship, port, date, nights and from-price." },
+  { "id": "REQ-SEARCH-02", "journey": "search", "priority": "P2", "title": "Filter by max price", "acceptance": "When a guest sets a maximum price per guest, then no sailing above that from-price is shown." },
+  { "id": "REQ-PRICE-01", "journey": "pricing", "priority": "P1", "title": "Quote calculation", "acceptance": "Total = base fare x cabin multiplier x guests - promo discount + 12% tax on discounted fare + $135 port fee per guest, rounded to cents." },
+  { "id": "REQ-PROMO-01", "journey": "pricing", "priority": "P1", "title": "Percent promo applied once", "acceptance": "A valid percent promo (SAIL10) reduces the cruise fare by exactly that percent, applied once." },
+  { "id": "REQ-PROMO-02", "journey": "pricing", "priority": "P2", "title": "Flat promo minimum guests", "acceptance": "WAVE200 gives $200 off only when there are 2 or more guests; with 1 guest it is rejected with a clear message." },
+  { "id": "REQ-PROMO-03", "journey": "pricing", "priority": "P1", "title": "Invalid or expired promo rejected", "acceptance": "An unknown or expired promo code is rejected with a guest-readable message and no discount." },
+  { "id": "REQ-INV-01", "journey": "inventory", "priority": "P1", "title": "Sold-out cabins not bookable", "acceptance": "A cabin type with no availability cannot be quoted or booked and shows as sold out." },
+  { "id": "REQ-PAY-01", "journey": "checkout", "priority": "P1", "title": "Successful booking", "acceptance": "With valid guest details and an approved card, a booking is CONFIRMED with a confirmation number and the charged total equals the quote." },
+  { "id": "REQ-PAY-02", "journey": "checkout", "priority": "P1", "title": "Declined card", "acceptance": "A declined card shows a clear retry message and creates no booking." },
+  { "id": "REQ-PAY-03", "journey": "checkout", "priority": "P1", "title": "Payment gateway outage", "acceptance": "If the payment gateway is unavailable the guest is told they have not been charged and no booking is created." },
+  { "id": "REQ-API-01", "journey": "platform", "priority": "P1", "title": "API contract", "acceptance": "Search, quote and booking responses conform to the published JSON schemas that web and mobile clients depend on." },
+  { "id": "REQ-GQL-01", "journey": "platform", "priority": "P2", "title": "GraphQL parity", "acceptance": "The GraphQL quote returns the same totals as the REST quote for the same inputs." },
+  { "id": "REQ-A11Y-01", "journey": "experience", "priority": "P2", "title": "Accessible booking journey", "acceptance": "Search, cabin and checkout pages have no serious or critical WCAG violations reported by axe." },
+  { "id": "REQ-MOB-01", "journey": "experience", "priority": "P1", "title": "Mobile booking journey", "acceptance": "A guest can complete search to confirmation on a phone-sized viewport." }
+]
