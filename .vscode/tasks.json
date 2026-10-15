@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "1. Setup (install + Chromium)", "type": "shell", "command": "npm ci; npx playwright install chromium", "problemMatcher": [] },
+    { "label": "2. Demo: clean build (SHIP)", "type": "shell", "command": "npm run demo", "problemMatcher": [] },
+    { "label": "3. Demo: promo bug (BLOCK)", "type": "shell", "command": "npm run demo -- promo_stack", "problemMatcher": [] },
+    { "label": "4. Open dashboard", "type": "shell", "command": "start results\\dashboard.html", "windows": { "options": { "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } } }, "problemMatcher": [] },
+    { "label": "5. Start booking site (localhost:3000)", "type": "shell", "command": "npm start", "isBackground": true, "problemMatcher": [] },
+    { "label": "6. AI test generation", "type": "shell", "command": "node tools/ai-testgen.js REQ-PROMO-02", "problemMatcher": [] },
+    { "label": "7. Risk-based selection (payment change)", "type": "shell", "command": "node tools/risk-select.js src/payment.js", "problemMatcher": [] }
+  ]
+}

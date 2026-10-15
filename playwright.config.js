@@ -5,6 +5,8 @@ const PORT = Number(process.env.E2E_PORT || 3100);
 module.exports = defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
+  workers: process.env.CI ? undefined : 2, // cap local browsers so slower laptops don't time out on launch
+  timeout: 60_000,
   retries: process.env.CI ? 1 : 0, // one retry in CI; a pass-on-retry is reported as flaky, not hidden
   reporter: [['list'], ['json', { outputFile: 'results/e2e.json' }], ['html', { outputFolder: 'results/e2e-html', open: 'never' }]],
   use: { baseURL: `http://localhost:${PORT}`, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
