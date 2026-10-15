@@ -2,8 +2,10 @@
 // booking service and a subset of the release gate entirely in the browser.
 const { test, expect } = require('@playwright/test');
 const path = require('path');
+const { pathToFileURL } = require('url');
 
-const PAGE = 'file://' + path.join(__dirname, '..', '..', 'docs', 'live-demo.html');
+// pathToFileURL gives a valid file:/// URL on Windows, macOS and Linux.
+const PAGE = pathToFileURL(path.join(__dirname, '..', '..', 'docs', 'live-demo.html')).href;
 
 test.beforeEach(async ({ page }) => {
   const errors = [];
