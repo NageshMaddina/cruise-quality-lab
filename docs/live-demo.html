@@ -1,0 +1,533 @@
+<meta charset="utf-8">
+<title>Cruise Quality Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: a captain's-log style console. Header band, tab bar, then one working panel per tab. */
+:root {
+  --bg: #eef3f4; --surface: #ffffff; --ink: #10232f; --muted: #50646f; --line: #d3dee2;
+  --accent: #0b6e78; --accent-ink: #ffffff; --accent-soft: #d8edef;
+  --good: #1b7f4a; --bad: #b3261e; --warn: #9a6700;
+  --band: #0f2a3d; --band-ink: #e6f1f3;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b171e; --surface: #12232c; --ink: #e3edf0; --muted: #9bb0b8; --line: #24404c;
+  --accent: #4fb8c2; --accent-ink: #06222a; --accent-soft: #163a43;
+  --good: #4cc38a; --bad: #f2867d; --warn: #e3b341; --band: #071118; --band-ink: #d9e8ec; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b171e; --surface: #12232c; --ink: #e3edf0; --muted: #9bb0b8; --line: #24404c;
+  --accent: #4fb8c2; --accent-ink: #06222a; --accent-soft: #163a43;
+  --good: #4cc38a; --bad: #f2867d; --warn: #e3b341; --band: #071118; --band-ink: #d9e8ec; color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); margin: 0 }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+header.band { background: var(--band); color: var(--band-ink) }
+header.band .wrap { padding-block: 28px 22px; display: grid; gap: 10px }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; opacity: .75 }
+h1 { font: 800 clamp(28px, 5vw, 40px)/1.1 var(--display); margin: 0; text-wrap: balance }
+.lede { max-width: 64ch; margin: 0; opacity: .9 }
+.links { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px }
+.links a { color: var(--band-ink); text-underline-offset: 3px }
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line) }
+nav.tabs .wrap { display: flex; gap: 4px; overflow-x: auto }
+nav.tabs button { font: 600 14px var(--body); background: none; border: 0; color: var(--muted); padding: 14px 14px 12px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent) }
+main .wrap { padding-block: 24px 48px; display: grid; gap: 20px }
+h2 { font: 600 22px/1.2 var(--display); margin: 0; text-wrap: balance }
+h3 { font: 600 16px/1.3 var(--body); margin: 0 }
+p { margin: 0 }
+.muted { color: var(--muted) } .small { font-size: 13px } .mono { font-family: var(--mono) }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; min-width: 0 }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--muted) }
+input, select { font: 15px var(--body); color: var(--ink); background: var(--surface); padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; min-width: 150px }
+button.btn { font: 600 14px var(--body); padding: 9px 16px; border-radius: 7px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer }
+button.btn.ghost { background: transparent; color: var(--accent) }
+button.btn:disabled { opacity: .5; cursor: not-allowed }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--warn); outline-offset: 2px }
+.defect { display: grid; gap: 8px; border: 1px dashed var(--warn); border-radius: 10px; padding: 12px 14px; background: color-mix(in srgb, var(--warn) 7%, transparent) }
+.defect .opts { display: flex; flex-wrap: wrap; gap: 8px }
+.chip { font: 500 13px var(--mono); padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer }
+.chip[aria-pressed="true"] { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 18%, var(--surface)) }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 }
+.steps li { font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--muted) }
+.steps li.on { background: var(--accent); color: var(--accent-ink) }
+.cards { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px }
+.card { border: 1px solid var(--line); border-radius: 9px; padding: 14px; display: grid; gap: 4px; align-content: start }
+.card .price { font-weight: 600; margin-top: 6px }
+.cabins { display: flex; flex-wrap: wrap; gap: 14px }
+.cabins label { display: flex; gap: 6px; align-items: center; color: var(--ink); font-size: 15px }
+.cabins input { min-width: 0 }
+table { border-collapse: collapse; width: 100%; font-size: 14px }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600 }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums }
+.quote { max-width: 380px }
+.quote tr.total td, .quote tr.total th { font-weight: 700; color: var(--ink); text-transform: none; font-size: 15px; letter-spacing: 0 }
+.quote th { text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 400 }
+.error { color: var(--bad); min-height: 1.2em }
+.scroll { overflow-x: auto }
+.verdict { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; border-left: 6px solid var(--muted) }
+.verdict.ship { border-left-color: var(--good) } .verdict.block { border-left-color: var(--bad) }
+.verdict .big { font: 800 34px/1 var(--display); letter-spacing: .02em }
+.verdict.ship .big { color: var(--good) } .verdict.block .big { color: var(--bad) }
+.verdict ul { margin: 6px 0 0; padding-left: 18px }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px }
+.kpi { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; background: var(--surface) }
+.kpi b { display: block; font: 700 22px var(--body); font-variant-numeric: tabular-nums }
+.kpi span { font-size: 12px; color: var(--muted) }
+.pill { font: 600 12px var(--body); padding: 2px 8px; border-radius: 999px; white-space: nowrap }
+.pill.pass { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent) }
+.pill.fail { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent) }
+.pill.ci { color: var(--muted); background: color-mix(in srgb, var(--muted) 14%, transparent) }
+.layers { display: grid; gap: 8px }
+.layer { display: grid; grid-template-columns: minmax(130px, 200px) 1fr; gap: 12px; align-items: baseline; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line) }
+.layer.hot { border-color: var(--accent); background: var(--accent-soft) }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px }
+.cmd { font: 13px/1.6 var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; white-space: pre; overflow-x: auto }
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 22px 20px }
+.node { position: relative; border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--surface); display: grid; gap: 3px; align-content: start; min-height: 96px; transition: border-color .25s, background-color .25s, box-shadow .25s }
+.node b { font: 600 14px var(--body) } .node .what { font-size: 12px; color: var(--muted) } .node .res { font: 500 12px/1.4 var(--mono); color: var(--ink) }
+.node:not(:last-child)::after { content: "\2192"; position: absolute; right: -17px; top: 38px; color: var(--muted); font-size: 16px }
+.node.run { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft) }
+.node.ok { border-color: var(--good); background: color-mix(in srgb, var(--good) 8%, var(--surface)) }
+.node.bad { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 8%, var(--surface)) }
+.node.ci { border-style: dashed }
+.node.dim { opacity: .45 }
+.outcomes { display: grid; gap: 8px }
+.outcome { border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 10px; font: 800 18px var(--display); text-align: center; color: var(--muted); transition: all .25s }
+.outcome.ship.lit { border-color: var(--good); color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--surface)) }
+.outcome.block.lit { border-color: var(--bad); color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--surface)) }
+.triage { display: grid; gap: 8px } .triage .cl { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px }
+@media (max-width: 960px) { .flow { grid-template-columns: repeat(3, minmax(0, 1fr)) } .node:nth-child(3)::after { content: "" } }
+@media (max-width: 640px) { .flow { grid-template-columns: 1fr } .node:not(:last-child)::after { content: "\2193"; right: auto; left: 18px; top: auto; bottom: -21px } }
+@media (prefers-reduced-motion: reduce) { .node, .outcome { transition: none } }
+.note { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px }
+@media (max-width: 520px) { input, select { min-width: 0; width: 100% } .row label { width: 100% } .layer { grid-template-columns: 1fr } }
+@media (prefers-reduced-motion: no-preference) { .panel { transition: border-color .2s } }
+</style>
+
+<header class="band">
+  <div class="wrap">
+    <div class="eyebrow">Quality engineering demo · Nageswara Rao Maddina</div>
+    <h1>Cruise Quality Lab</h1>
+    <p class="lede">A cruise-booking journey and the quality system that guards it: layered tests tied to guest journeys, AI-assisted triage, and a release gate that says SHIP or BLOCK in business terms. Try the booking flow, inject a defect, and watch the gate catch it.</p>
+    <div class="links">
+      <a href="https://github.com/NageshMaddina/cruise-quality-lab" target="_blank" rel="noopener">Source on GitHub</a>
+      <a href="https://github.com/NageshMaddina/cruise-quality-lab/actions" target="_blank" rel="noopener">CI pipeline runs</a>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="wrap" role="tablist">
+    <button role="tab" id="t-book" aria-selected="true" aria-controls="p-book">Book a cruise</button>
+    <button role="tab" id="t-gate" aria-selected="false" aria-controls="p-gate">Release pipeline</button>
+    <button role="tab" id="t-how" aria-selected="false" aria-controls="p-how">How it works</button>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap">
+    <section class="defect" aria-labelledby="defect-h">
+      <h3 id="defect-h">Inject a defect</h3>
+      <p class="small muted">Changes the booking service on this page. Then book a cruise or run the release gate.</p>
+      <div class="opts" id="defects">
+        <button class="chip" data-bug="" aria-pressed="true">None (clean build)</button>
+        <button class="chip" data-bug="promo_stack" aria-pressed="false">promo_stack: promo applied twice</button>
+        <button class="chip" data-bug="no_taxes" aria-pressed="false">no_taxes: taxes dropped</button>
+        <button class="chip" data-bug="payment_down" aria-pressed="false">payment_down: gateway outage</button>
+      </div>
+    </section>
+
+    <!-- BOOKING -->
+    <section id="p-book" role="tabpanel" aria-labelledby="t-book" class="panel">
+      <ol class="steps" aria-label="Booking progress">
+        <li data-s="search" class="on">Search</li><li data-s="cabin">Cabin &amp; price</li><li data-s="checkout">Guest &amp; payment</li><li data-s="confirm">Confirmation</li>
+      </ol>
+
+      <div id="s-search" class="panel" style="border:0;padding:0">
+        <h2>Find your cruise</h2>
+        <form id="search-form" class="row">
+          <label for="destination">Destination
+            <select id="destination"><option value="">Any</option><option>Caribbean</option><option>Alaska</option><option>Mediterranean</option><option>Mexico</option></select>
+          </label>
+          <label for="maxPrice">Max price per guest (USD)
+            <input id="maxPrice" type="number" min="0" step="50" placeholder="Any">
+          </label>
+          <button class="btn" type="submit">Search cruises</button>
+        </form>
+        <p id="count" class="muted small" role="status" aria-live="polite"></p>
+        <ul id="results" class="cards"></ul>
+      </div>
+
+      <div id="s-cabin" class="panel" style="border:0;padding:0" hidden>
+        <h2>Choose your cabin</h2>
+        <p id="cruise-title" class="muted"></p>
+        <fieldset style="border:1px solid var(--line);border-radius:8px;margin:0;padding:10px 12px">
+          <legend class="small muted">Cabin type</legend>
+          <div id="cabins" class="cabins"></div>
+        </fieldset>
+        <div class="row">
+          <label for="guests">Guests <select id="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+          <label for="promo">Promo code <input id="promo" autocomplete="off" placeholder="SAIL10, WAVE200 or FALL25"></label>
+          <button class="btn" type="button" id="quote-btn">Get price</button>
+        </div>
+        <p id="quote-error" class="error" role="alert"></p>
+        <table class="quote" id="quote" hidden>
+          <tbody>
+            <tr><th scope="row">Cruise fare</th><td class="num" id="q-fare"></td></tr>
+            <tr><th scope="row">Promotion</th><td class="num" id="q-disc"></td></tr>
+            <tr><th scope="row">Taxes (12%)</th><td class="num" id="q-tax"></td></tr>
+            <tr><th scope="row">Port fees</th><td class="num" id="q-port"></td></tr>
+            <tr class="total"><th scope="row">Total</th><td class="num" id="q-total"></td></tr>
+          </tbody>
+        </table>
+        <div class="row"><button class="btn ghost" type="button" data-back="search">Back</button><button class="btn" type="button" id="to-checkout" disabled>Continue to checkout</button></div>
+      </div>
+
+      <div id="s-checkout" class="panel" style="border:0;padding:0" hidden>
+        <h2>Guest and payment</h2>
+        <form id="pay-form" class="panel" style="border:0;padding:0" novalidate>
+          <div class="row">
+            <label for="first">First name <input id="first" autocomplete="given-name" value="Ana"></label>
+            <label for="last">Last name <input id="last" autocomplete="family-name" value="Lopez"></label>
+            <label for="email">Email <input id="email" type="email" autocomplete="email" value="ana@example.com"></label>
+          </div>
+          <div class="row">
+            <label for="card">Test card number
+              <select id="card">
+                <option value="4242424242424242">4242 4242 4242 4242 (approves)</option>
+                <option value="4000000000000002">4000 0000 0000 0002 (declines)</option>
+                <option value="4000000000009995">4000 0000 0000 9995 (gateway timeout)</option>
+              </select>
+            </label>
+          </div>
+          <p id="due" style="font-weight:600"></p>
+          <p id="pay-error" class="error" role="alert"></p>
+          <div class="row"><button class="btn ghost" type="button" data-back="cabin">Back</button><button class="btn" type="submit" id="pay-btn">Pay and book</button></div>
+        </form>
+      </div>
+
+      <div id="s-confirm" class="panel" style="border:0;padding:0" hidden>
+        <h2>You're booked</h2>
+        <p>Confirmation number <b id="bk-id" class="mono"></b></p>
+        <p id="bk-summary"></p>
+        <div class="row"><button class="btn" type="button" id="again">Plan another cruise</button></div>
+      </div>
+      <p class="note">Fictional brand, sailings and payment gateway. No real payments; only the test cards above work.</p>
+    </section>
+
+    <!-- GATE -->
+    <section id="p-gate" role="tabpanel" aria-labelledby="t-gate" class="panel" hidden>
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div><h2>Release pipeline</h2><p class="small muted">Press Run to watch the pipeline: it selects what the change puts at risk, runs the checks against the booking service on this page, triages failures and makes the release call.</p></div>
+        <button class="btn" type="button" id="run-gate">Run the pipeline</button>
+      </div>
+      <ol class="flow" id="flow" aria-label="Release pipeline">
+        <li class="node" id="f-change"><b>Code change</b><span class="what">What this release touches</span><span class="res" id="r-change"></span></li>
+        <li class="node" id="f-select"><b>Risk-based selection</b><span class="what">Changed files → journeys at risk</span><span class="res" id="r-select"></span></li>
+        <li class="node" id="f-fast"><b>Fast checks</b><span class="what">Unit · API · contract</span><span class="res" id="r-fast"></span></li>
+        <li class="node ci" id="f-e2e"><b>Guest journeys E2E</b><span class="what">Playwright desktop + mobile, axe</span><span class="res" id="r-e2e"></span></li>
+        <li class="node" id="f-triage"><b>Failure triage</b><span class="what">Cluster failures, suggest a cause</span><span class="res" id="r-triage"></span></li>
+        <li class="node" id="f-gate"><b>Release gate</b><span class="what">Policy on P1 journeys</span>
+          <div class="outcomes"><div class="outcome ship" id="o-ship">SHIP</div><div class="outcome block" id="o-block">BLOCK</div></div></li>
+      </ol>
+      <div id="verdict" class="panel verdict"></div>
+      <div class="triage" id="triage" hidden></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="scroll"><table id="req-table"><thead><tr><th>Requirement</th><th>Journey</th><th>Priority</th><th class="num">Checks</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+      <details><summary class="small">Individual checks</summary><div class="scroll"><table id="check-table"><thead><tr><th>Check</th><th>Requirement</th><th>Result</th></tr></thead><tbody></tbody></table></div></details>
+      <p class="note">This page runs 17 service checks in your browser. The full suite (42 tests: Jest unit, API and contract tests, plus Playwright journeys on desktop and a Pixel 7 profile with axe accessibility checks) runs in GitHub Actions on every push. Requirements marked “CI” are covered there.</p>
+    </section>
+
+    <!-- HOW -->
+    <section id="p-how" role="tabpanel" aria-labelledby="t-how" class="panel" hidden>
+      <h2>How the quality system is built</h2>
+      <p class="muted" style="max-width:68ch">Most checks run at the fast layers. Only the revenue-critical guest journeys run end to end, and the release gate is tied to those journeys, not to a raw test count.</p>
+      <div class="layers">
+        <div class="layer"><b>Production</b><span>Synthetic bookings and alerts on the booking path after deploy.</span></div>
+        <div class="layer hot"><b>P1 guest journeys</b><span>Playwright on desktop Chrome and a Pixel 7 profile; axe accessibility checks. Detox and Appium for native React Native (reference design).</span></div>
+        <div class="layer"><b>Contract</b><span>JSON Schema on REST responses, GraphQL parity with REST, no full card numbers ever returned.</span></div>
+        <div class="layer"><b>API</b><span>Search, quote and booking, including payment approve, decline and outage paths.</span></div>
+        <div class="layer"><b>Unit</b><span>Pricing, cabin multipliers, promotion rules, input limits. Runs in under a second.</span></div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>Release gate policy</h3>
+          <ul style="margin:0;padding-left:18px">
+            <li>Any failing or untested P1 guest journey blocks.</li>
+            <li>A failing P2 requirement blocks unless it has a written exception with owner and expiry.</li>
+            <li>Pass rate must be at least 98%; at most 2 flaky tests; E2E under 10 minutes.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>AI with guardrails</h3>
+          <ul style="margin:0;padding-left:18px">
+            <li>Claude drafts test cases from acceptance criteria; each is schema-checked, de-duplicated and run against the service before a human reviews it.</li>
+            <li>Failures are clustered by signature; Claude proposes a root cause and next step.</li>
+            <li>Risk-based selection runs only the tests a change can affect.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Run the full pipeline yourself</h3>
+        <div class="cmd">git clone https://github.com/NageshMaddina/cruise-quality-lab
+cd cruise-quality-lab
+npm ci &amp;&amp; npx playwright install chromium
+npm run demo                  # clean build → SHIP
+npm run demo -- promo_stack   # injected defect → BLOCK</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(() => {
+  // ---------- Booking service (same rules as src/pricing.js and src/payment.js in the repo) ----------
+  const cruises = [
+    { id: 'CQL-101', ship: 'Ocean Aurora', destination: 'Caribbean', departurePort: 'Fort Lauderdale', departureDate: '2026-12-05', nights: 7, baseFare: 899, capacity: { interior: 40, oceanview: 20, balcony: 10, suite: 2 } },
+    { id: 'CQL-102', ship: 'Coral Horizon', destination: 'Caribbean', departurePort: 'Fort Lauderdale', departureDate: '2027-01-16', nights: 10, baseFare: 1299, capacity: { interior: 30, oceanview: 15, balcony: 8, suite: 0 } },
+    { id: 'CQL-201', ship: 'Glacier Star', destination: 'Alaska', departurePort: 'Seattle', departureDate: '2027-05-22', nights: 7, baseFare: 1099, capacity: { interior: 25, oceanview: 25, balcony: 12, suite: 4 } },
+    { id: 'CQL-301', ship: 'Azure Muse', destination: 'Mediterranean', departurePort: 'Barcelona', departureDate: '2027-06-10', nights: 12, baseFare: 1899, capacity: { interior: 20, oceanview: 10, balcony: 6, suite: 2 } },
+    { id: 'CQL-401', ship: 'Pacific Lark', destination: 'Mexico', departurePort: 'Los Angeles', departureDate: '2026-11-21', nights: 5, baseFare: 549, capacity: { interior: 50, oceanview: 0, balcony: 15, suite: 1 } }
+  ];
+  const mult = { interior: 1.0, oceanview: 1.25, balcony: 1.6, suite: 2.75 };
+  const promos = {
+    SAIL10: { type: 'percent', value: 10, expires: '2027-12-31' },
+    WAVE200: { type: 'flat', value: 200, minGuests: 2, expires: '2027-03-31' },
+    FALL25: { type: 'percent', value: 25, expires: '2025-11-30' }
+  };
+  const TAX = 0.12, PORT = 135;
+  let BUG = '';
+  const r2 = (n) => Math.round(n * 100) / 100;
+  const err = (status, code, message) => ({ status, body: { error: { code, message } } });
+
+  function quote({ cruiseId, cabinType, guests, promoCode }) {
+    const c = cruises.find((x) => x.id === cruiseId);
+    if (!c) return err(404, 'CRUISE_NOT_FOUND', 'Cruise not found');
+    if (!(cabinType in mult)) return err(400, 'CABIN_INVALID', `Unknown cabin type ${cabinType}`);
+    if (!Number.isInteger(guests) || guests < 1 || guests > 4) return err(400, 'GUESTS_INVALID', 'Guests must be between 1 and 4');
+    if (!c.capacity[cabinType]) return err(409, 'SOLD_OUT', `${cabinType} cabins are sold out on this sailing`);
+    const fare = r2(c.baseFare * mult[cabinType] * guests);
+    let promo = null;
+    if (promoCode) {
+      promo = promos[String(promoCode).trim().toUpperCase()];
+      if (!promo) return err(400, 'PROMO_INVALID', `Promo code ${promoCode} is not valid`);
+      if (new Date(promo.expires + 'T23:59:59Z') < new Date()) return err(400, 'PROMO_EXPIRED', `Promo code ${promoCode} has expired`);
+      if (promo.minGuests && guests < promo.minGuests) return err(400, 'PROMO_MIN_GUESTS', `Promo code ${promoCode} needs at least ${promo.minGuests} guests`);
+    }
+    let discount = promo ? (promo.type === 'percent' ? r2(fare * promo.value / 100) : promo.value) : 0;
+    if (BUG === 'promo_stack' && promo) discount *= 2;
+    discount = Math.min(discount, fare);
+    const taxes = BUG === 'no_taxes' ? 0 : r2((fare - discount) * TAX);
+    const portFees = PORT * guests;
+    return { status: 200, body: { cruiseId, cabinType, guests, promoCode: promo ? String(promoCode).toUpperCase() : null, currency: 'USD', fare, discount: r2(discount), taxes, portFees, total: r2(fare - discount + taxes + portFees) } };
+  }
+
+  function authorize(card) {
+    const n = String(card || '').replace(/\s+/g, '');
+    if (n === '4000000000009995' || BUG === 'payment_down') return 'gateway_error';
+    if (n === '4242424242424242') return 'approved';
+    return 'declined';
+  }
+
+  const bookings = new Map();
+  function book(b) {
+    const g = b.guest || {};
+    if (!g.firstName || !g.lastName || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(g.email || '')) return err(400, 'GUEST_INVALID', 'Enter a first name, last name and a valid email.');
+    const q = quote(b); if (q.status !== 200) return q;
+    const a = authorize(b.cardNumber);
+    if (a === 'declined') return err(402, 'PAYMENT_DECLINED', 'Payment was declined. Try another card.');
+    if (a === 'gateway_error') return err(503, 'PAYMENT_UNAVAILABLE', 'Payment service is unavailable. You have not been charged.');
+    const id = 'BK-' + Array.from(crypto.getRandomValues(new Uint8Array(4))).map((x) => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+    const booking = { bookingId: id, status: 'CONFIRMED', guest: { firstName: g.firstName, lastName: g.lastName, email: g.email }, payment: { cardLast4: String(b.cardNumber).slice(-4) }, quote: q.body };
+    bookings.set(id, booking);
+    return { status: 201, body: booking };
+  }
+
+  function search({ destination, maxPrice } = {}) {
+    let list = cruises;
+    if (destination) list = list.filter((c) => c.destination === destination);
+    if (maxPrice) list = list.filter((c) => c.baseFare <= Number(maxPrice));
+    return { status: 200, body: { count: list.length, results: list.map((c) => ({ id: c.id, ship: c.ship, destination: c.destination, departurePort: c.departurePort, departureDate: c.departureDate, nights: c.nights, fromPrice: c.baseFare })) } };
+  }
+
+  // ---------- Booking UI ----------
+  const $ = (s) => document.querySelector(s);
+  const money = (n) => '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const st = { cruise: null, quote: null };
+
+  function step(name) {
+    for (const s of ['search', 'cabin', 'checkout', 'confirm']) $('#s-' + s).hidden = s !== name;
+    document.querySelectorAll('.steps li').forEach((li) => li.classList.toggle('on', li.dataset.s === name));
+  }
+
+  function runSearch() {
+    const r = search({ destination: $('#destination').value, maxPrice: $('#maxPrice').value }).body;
+    $('#count').textContent = `${r.count} sailing${r.count === 1 ? '' : 's'} found`;
+    const ul = $('#results'); ul.innerHTML = '';
+    for (const c of r.results) {
+      const li = document.createElement('li'); li.className = 'card';
+      li.innerHTML = `<h3>${c.nights}-night ${c.destination}</h3><p class="small">${c.ship} · from ${c.departurePort}</p><p class="small muted">Departs ${c.departureDate}</p><p class="price">From ${money(c.fromPrice)} <span class="small muted">per guest</span></p>`;
+      const b = document.createElement('button'); b.className = 'btn ghost'; b.type = 'button'; b.textContent = 'Select ' + c.ship;
+      b.addEventListener('click', () => pick(c.id)); li.appendChild(b); ul.appendChild(li);
+    }
+  }
+  $('#search-form').addEventListener('submit', (e) => { e.preventDefault(); runSearch(); });
+
+  function pick(id) {
+    const c = cruises.find((x) => x.id === id); st.cruise = c; st.quote = null;
+    $('#cruise-title').textContent = `${c.ship} · ${c.nights} nights · departs ${c.departureDate} from ${c.departurePort}`;
+    const box = $('#cabins'); box.innerHTML = '';
+    Object.keys(mult).forEach((t, i) => {
+      const ok = c.capacity[t] > 0;
+      const l = document.createElement('label');
+      l.innerHTML = `<input type="radio" name="cabin" id="cab-${t}" value="${t}" ${ok ? '' : 'disabled'} ${i === 0 ? 'checked' : ''}> ${t[0].toUpperCase() + t.slice(1)}${ok ? '' : ' (sold out)'}`;
+      box.appendChild(l);
+    });
+    $('#quote').hidden = true; $('#quote-error').textContent = ''; $('#to-checkout').disabled = true; $('#promo').value = '';
+    step('cabin');
+  }
+
+  $('#quote-btn').addEventListener('click', () => {
+    const cab = document.querySelector('input[name=cabin]:checked');
+    const r = quote({ cruiseId: st.cruise.id, cabinType: cab && cab.value, guests: Number($('#guests').value), promoCode: $('#promo').value || undefined });
+    if (r.status !== 200) { $('#quote-error').textContent = r.body.error.message; $('#quote').hidden = true; $('#to-checkout').disabled = true; return; }
+    const q = st.quote = r.body; $('#quote-error').textContent = '';
+    $('#q-fare').textContent = money(q.fare);
+    $('#q-disc').textContent = q.discount ? '−' + money(q.discount) + ` (${q.promoCode})` : 'None';
+    $('#q-tax').textContent = money(q.taxes); $('#q-port').textContent = money(q.portFees); $('#q-total').textContent = money(q.total);
+    $('#quote').hidden = false; $('#to-checkout').disabled = false;
+  });
+  $('#to-checkout').addEventListener('click', () => { $('#due').textContent = 'Amount due today: ' + money(st.quote.total); $('#pay-error').textContent = ''; step('checkout'); });
+  $('#pay-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = st.quote;
+    const r = book({ cruiseId: q.cruiseId, cabinType: q.cabinType, guests: q.guests, promoCode: q.promoCode || undefined, cardNumber: $('#card').value,
+      guest: { firstName: $('#first').value.trim(), lastName: $('#last').value.trim(), email: $('#email').value.trim() } });
+    if (r.status !== 201) { $('#pay-error').textContent = r.body.error.message; return; }
+    const b = r.body;
+    $('#bk-id').textContent = b.bookingId;
+    $('#bk-summary').textContent = `${b.guest.firstName}, your ${b.quote.cabinType} cabin for ${b.quote.guests} is confirmed. Charged ${money(b.quote.total)} to the card ending ${b.payment.cardLast4}.`;
+    step('confirm');
+  });
+  document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => step(b.dataset.back)));
+  $('#again').addEventListener('click', () => step('search'));
+
+  // ---------- Release gate (in-browser subset of the suite) ----------
+  const reqs = [
+    ['REQ-SEARCH-01', 'Search by destination', 'search', 'P1'], ['REQ-SEARCH-02', 'Filter by max price', 'search', 'P2'],
+    ['REQ-PRICE-01', 'Quote calculation', 'pricing', 'P1'], ['REQ-PROMO-01', 'Percent promo applied once', 'pricing', 'P1'],
+    ['REQ-PROMO-02', 'Flat promo minimum guests', 'pricing', 'P2'], ['REQ-PROMO-03', 'Invalid or expired promo rejected', 'pricing', 'P1'],
+    ['REQ-INV-01', 'Sold-out cabins not bookable', 'inventory', 'P1'], ['REQ-PAY-01', 'Successful booking', 'checkout', 'P1'],
+    ['REQ-PAY-02', 'Declined card', 'checkout', 'P1'], ['REQ-PAY-03', 'Payment gateway outage', 'checkout', 'P1'],
+    ['REQ-API-01', 'API contract', 'platform', 'P1'], ['REQ-GQL-01', 'GraphQL parity', 'platform', 'P2'],
+    ['REQ-A11Y-01', 'Accessible booking journey', 'experience', 'P2'], ['REQ-MOB-01', 'Mobile booking journey', 'experience', 'P1']
+  ];
+  const guest = { firstName: 'Sam', lastName: 'Lee', email: 'sam@example.com' };
+  const near = (a, b) => Math.abs(a - b) < 0.011;
+  const checks = [
+    ['REQ-SEARCH-01', 'Destination search returns only that destination', () => { const r = search({ destination: 'Alaska' }).body; return r.count > 0 && r.results.every((c) => c.destination === 'Alaska'); }],
+    ['REQ-SEARCH-02', 'Max price filter excludes higher fares', () => search({ maxPrice: 900 }).body.results.every((c) => c.fromPrice <= 900)],
+    ['REQ-PRICE-01', 'Interior, 2 guests: total $2,283.76', () => quote({ cruiseId: 'CQL-101', cabinType: 'interior', guests: 2 }).body.total === 2283.76],
+    ['REQ-PRICE-01', 'Balcony, 3 guests uses the 1.6 multiplier and 12% tax', () => { const q = quote({ cruiseId: 'CQL-101', cabinType: 'balcony', guests: 3 }).body; return near(q.fare, 899 * 1.6 * 3) && near(q.total, q.fare * 1.12 + 405); }],
+    ['REQ-PRICE-01', '5 guests is rejected', () => quote({ cruiseId: 'CQL-101', cabinType: 'interior', guests: 5 }).status === 400],
+    ['REQ-PROMO-01', 'SAIL10 takes exactly 10% off, once', () => { const q = quote({ cruiseId: 'CQL-101', cabinType: 'balcony', guests: 2, promoCode: 'SAIL10' }).body; return near(q.discount, q.fare * 0.1) && near(q.total, (q.fare - q.discount) * 1.12 + 270); }],
+    ['REQ-PROMO-02', 'WAVE200 with 2 guests takes $200 off', () => quote({ cruiseId: 'CQL-101', cabinType: 'interior', guests: 2, promoCode: 'WAVE200' }).body.discount === 200],
+    ['REQ-PROMO-02', 'WAVE200 with 1 guest is rejected', () => quote({ cruiseId: 'CQL-101', cabinType: 'interior', guests: 1, promoCode: 'WAVE200' }).body.error?.code === 'PROMO_MIN_GUESTS'],
+    ['REQ-PROMO-03', 'Expired FALL25 is rejected', () => quote({ cruiseId: 'CQL-101', cabinType: 'interior', guests: 2, promoCode: 'FALL25' }).body.error?.code === 'PROMO_EXPIRED'],
+    ['REQ-PROMO-03', 'Unknown promo is rejected', () => quote({ cruiseId: 'CQL-101', cabinType: 'interior', guests: 2, promoCode: 'FREECRUISE' }).body.error?.code === 'PROMO_INVALID'],
+    ['REQ-INV-01', 'Sold-out suite returns 409', () => quote({ cruiseId: 'CQL-102', cabinType: 'suite', guests: 2 }).status === 409],
+    ['REQ-PAY-01', 'Approved card books and charges the quoted total', () => { const q = quote({ cruiseId: 'CQL-101', cabinType: 'balcony', guests: 2, promoCode: 'SAIL10' }).body; const b = book({ cruiseId: 'CQL-101', cabinType: 'balcony', guests: 2, promoCode: 'SAIL10', guest, cardNumber: '4242424242424242' }); return b.status === 201 && b.body.status === 'CONFIRMED' && b.body.quote.total === q.total; }],
+    ['REQ-PAY-01', 'Invalid email is rejected before payment', () => book({ cruiseId: 'CQL-101', cabinType: 'interior', guests: 2, guest: { ...guest, email: 'nope' }, cardNumber: '4242424242424242' }).status === 400],
+    ['REQ-PAY-02', 'Declined card returns 402 and no booking', () => { const b = book({ cruiseId: 'CQL-201', cabinType: 'interior', guests: 2, guest, cardNumber: '4000000000000002' }); return b.status === 402 && !b.body.bookingId; }],
+    ['REQ-PAY-03', 'Gateway timeout says the guest was not charged', () => { const b = book({ cruiseId: 'CQL-201', cabinType: 'interior', guests: 2, guest, cardNumber: '4000000000009995' }); return b.status === 503 && /not been charged/.test(b.body.error.message); }],
+    ['REQ-API-01', 'Quote response has every contract field with the right type', () => { const q = quote({ cruiseId: 'CQL-201', cabinType: 'oceanview', guests: 3 }).body; return ['fare', 'discount', 'taxes', 'portFees', 'total'].every((k) => typeof q[k] === 'number' && q[k] >= 0) && q.currency === 'USD'; }],
+    ['REQ-API-01', 'Booking response never contains the full card number', () => !JSON.stringify(book({ cruiseId: 'CQL-201', cabinType: 'interior', guests: 2, guest, cardNumber: '4242424242424242' }).body).includes('4242424242424242')]
+  ];
+
+  const CHANGES = { '': ['No code change (clean build)', 'Full suite'], promo_stack: ['src/pricing.js changed', 'pricing, inventory, checkout'], no_taxes: ['src/pricing.js changed', 'pricing, inventory, checkout'], payment_down: ['src/payment.js changed', 'checkout'] };
+  const COMPONENT = { search: 'Search', pricing: 'Pricing / promotions', inventory: 'Inventory', checkout: 'Payment gateway', platform: 'API contract' };
+  const HINT = {
+    'Pricing / promotions': 'Totals or discounts differ from the pricing rules. Start in quote(): check how the discount and tax are calculated.',
+    'Payment gateway': 'Approved and declined cards both get a gateway error. Check the payment provider connection, not the booking code.',
+    'API contract': 'Response shape changed. Compare the quote and booking payloads with the published schema.',
+    'Inventory': 'Availability rules failing. Check cabin capacity data for the sailing.',
+    'Search': 'Search filters returning the wrong sailings.'
+  };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  let running = false;
+  async function runPipeline(animate) {
+    if (running) return; running = true;
+    const nodes = ['change', 'select', 'fast', 'e2e', 'triage', 'gate'];
+    nodes.forEach((n) => { $('#f-' + n).className = 'node' + (n === 'e2e' ? ' ci' : ''); $('#r-' + n) && ($('#r-' + n).textContent = ''); });
+    ['#o-ship', '#o-block'].forEach((o) => { $(o).classList.remove('lit'); $(o).style.opacity = ''; });
+    const g = runGate();
+    const set = async (n, cls, text) => { const el = $('#f-' + n); if (animate) { el.classList.add('run'); await sleep(550); el.classList.remove('run'); } el.classList.add(cls); if (text != null && $('#r-' + n)) $('#r-' + n).textContent = text; };
+    const [chg, sel] = CHANGES[BUG] || CHANGES[''];
+    await set('change', 'ok', chg);
+    await set('select', 'ok', 'At risk: ' + sel);
+    await set('fast', g.failed ? 'bad' : 'ok', `${g.passed}/${g.total} pass`);
+    await set('e2e', 'ok', 'Runs in CI on every push (12 tests)');
+    const clusters = {};
+    g.fails.forEach((f) => { const j = reqs.find((r) => r[0] === f.req)[2]; const c = COMPONENT[j] || j; (clusters[c] ||= []).push(f); });
+    const names = Object.keys(clusters);
+    await set('triage', names.length ? 'bad' : (animate ? 'ok' : 'ok'), names.length ? `${g.failed} failures → ${names.length} cluster${names.length > 1 ? 's' : ''}` : 'Nothing to triage');
+    const tri = $('#triage');
+    tri.hidden = !names.length;
+    tri.innerHTML = names.length ? '<h3>Triage</h3>' + names.map((c) => `<div class="cl"><b>${c} · ${clusters[c].length} failing check${clusters[c].length > 1 ? 's' : ''}</b><span class="small mono">${[...new Set(clusters[c].map((f) => f.req))].join(', ')}</span><span class="small">${HINT[c] || ''}</span></div>`).join('') + '<p class="small muted">Rules-based triage on this page. In CI, Claude proposes the root cause and next step when an API key is set.</p>' : '';
+    await set('gate', g.ship ? 'ok' : 'bad');
+    $(g.ship ? '#o-ship' : '#o-block').classList.add('lit');
+    $(g.ship ? '#o-block' : '#o-ship').style.opacity = '.45'; $(g.ship ? '#o-ship' : '#o-block').style.opacity = '1';
+    running = false;
+  }
+
+  function runGate() {
+    const res = checks.map(([req, title, fn]) => { let ok = false; try { ok = !!fn(); } catch { ok = false; } return { req, title, ok }; });
+    const rows = reqs.map(([id, title, journey, pri]) => {
+      const mine = res.filter((r) => r.req === id);
+      const status = !mine.length ? 'CI' : mine.some((r) => !r.ok) ? 'FAILING' : 'PASSING';
+      return { id, title, journey, pri, n: mine.length, status };
+    });
+    const passed = res.filter((r) => r.ok).length, rate = Math.round(passed / res.length * 1000) / 10;
+    const p1f = rows.filter((r) => r.pri === 'P1' && r.status === 'FAILING'), p2f = rows.filter((r) => r.pri !== 'P1' && r.status === 'FAILING');
+    const reasons = [];
+    if (p1f.length) reasons.push('P1 guest journey failing: ' + p1f.map((r) => `${r.id} (${r.title})`).join('; '));
+    if (p2f.length) reasons.push('P2 requirement failing without an approved exception: ' + p2f.map((r) => r.id).join(', '));
+    if (rate < 98) reasons.push(`Pass rate ${rate}% is below 98%`);
+    const ship = !reasons.length;
+    const tested = rows.filter((r) => r.status !== 'CI'), p1 = tested.filter((r) => r.pri === 'P1');
+
+    const v = $('#verdict'); v.className = 'panel verdict ' + (ship ? 'ship' : 'block');
+    v.innerHTML = `<div style="min-width:0"><h3>${ship ? 'All tested P1 guest journeys pass' : 'Release blocked'}</h3><p class="small muted">Defect injected: <span class="mono">${BUG || 'none'}</span></p>${reasons.length ? '<ul>' + reasons.map((r) => `<li>${r}</li>`).join('') + '</ul>' : ''}</div><div class="big">${ship ? 'SHIP' : 'BLOCK'}</div>`;
+    const kpi = (v, l) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`;
+    $('#kpis').innerHTML = kpi(`${p1.filter((r) => r.status === 'PASSING').length}/${p1.length}`, 'P1 journeys passing (tested here)') + kpi(rate + '%', 'Pass rate') + kpi(`${passed}/${res.length}`, 'Checks passed') + kpi(res.length - passed, 'Failing checks');
+    $('#req-table tbody').innerHTML = rows.map((r) => `<tr><td><span class="mono small">${r.id}</span><br>${r.title}</td><td>${r.journey}</td><td>${r.pri}</td><td class="num">${r.n || '—'}</td><td><span class="pill ${r.status === 'PASSING' ? 'pass' : r.status === 'FAILING' ? 'fail' : 'ci'}">${r.status === 'CI' ? 'CI (Playwright / GraphQL)' : r.status}</span></td></tr>`).join('');
+    $('#check-table tbody').innerHTML = res.map((r) => `<tr><td>${r.title}</td><td class="mono small">${r.req}</td><td><span class="pill ${r.ok ? 'pass' : 'fail'}">${r.ok ? 'pass' : 'fail'}</span></td></tr>`).join('');
+    return { ship, passed, total: res.length, failed: res.length - passed, fails: res.filter((r) => !r.ok) };
+  }
+  $('#run-gate').addEventListener('click', () => runPipeline(true));
+
+  // ---------- Defect toggle and tabs ----------
+  document.querySelectorAll('#defects .chip').forEach((b) => b.addEventListener('click', () => {
+    BUG = b.dataset.bug;
+    document.querySelectorAll('#defects .chip').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    runPipeline(false);
+    if (!$('#quote').hidden && st.cruise) $('#quote-btn').click();
+  }));
+  const tabs = [['t-book', 'p-book', 'book'], ['t-gate', 'p-gate', 'gate'], ['t-how', 'p-how', 'how']];
+  function show(key) {
+    tabs.forEach(([t, p, k]) => { $('#' + t).setAttribute('aria-selected', String(k === key)); $('#' + p).hidden = k !== key; });
+  }
+  tabs.forEach(([t, , k]) => $('#' + t).addEventListener('click', () => show(k)));
+  const h = location.hash.slice(1); if (['book', 'gate', 'how'].includes(h)) show(h);
+
+  runSearch(); runPipeline(false);
+})();
+</script>

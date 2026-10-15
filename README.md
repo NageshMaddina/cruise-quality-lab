@@ -11,6 +11,27 @@ gate that makes a clear **SHIP / BLOCK** call in business terms.
 > Demo only: a fictional brand ("Seaward Voyages"), fictional sailings and a mock payment
 > gateway with test card numbers. Not affiliated with any cruise line.
 
+## Try it without installing
+
+`docs/live-demo.html` is a single page that runs the booking service and a subset of the
+release gate in the browser: book a cruise, inject a defect, and watch the pipeline animate
+from code change to **SHIP** or **BLOCK**. Open the file locally or use the shared demo link.
+
+## Release pipeline
+
+```mermaid
+flowchart LR
+  A[Code change] --> B[Risk-based selection<br/>changed files → journeys at risk]
+  B --> C[Fast checks<br/>Jest unit · API · contract]
+  B --> D[Guest journeys E2E<br/>Playwright desktop + Pixel 7 · axe]
+  C --> E[Failure triage<br/>cluster + Claude root-cause hint]
+  D --> E
+  E --> F{Release gate<br/>P1 journeys · coverage · pass rate · flaky}
+  F -- all P1 pass --> G[SHIP]
+  F -- P1 failing or untested --> H[BLOCK]
+  H -. P2 only, written exception .-> G
+```
+
 ## Run it in 2 minutes
 
 ```bash
@@ -38,6 +59,7 @@ offline rules to Claude (`AI_MODEL` picks the model). Everything runs without a 
 | API | Jest + Supertest | Search, quote, booking, payment outcomes (approve / decline / outage) | every PR |
 | Contract | Ajv JSON Schema + GraphQL | Response shapes web and mobile depend on; no full card numbers; GraphQL = REST parity | every PR |
 | E2E | Playwright (page objects) | P1 guest journeys on desktop Chrome and a Pixel 7 mobile profile | before deploy |
+| Live page | Playwright | The shareable demo page: booking, decline path, SHIP on clean build, BLOCK + correct triage for each defect | before deploy |
 | Accessibility | axe-core in Playwright | No serious/critical WCAG 2 A/AA issues on search and cabin pages | before deploy |
 | Mobile native (reference) | Detox, Appium + BrowserStack | Same journeys and testIDs for a React Native app — see `mobile/` | design only |
 

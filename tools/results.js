@@ -35,7 +35,7 @@ function loadPlaywright() {
         const last = t.results[t.results.length - 1] || {};
         const status = t.status === 'skipped' ? 'skipped' : (t.status === 'expected' || t.status === 'flaky') ? 'passed' : 'failed';
         out.push({
-          layer: 'e2e', project: t.projectName, file: 'tests/e2e/' + spec.file,
+          layer: 'e2e', project: t.projectName, file: 'tests/' + spec.file,
           title: [...trail, spec.title].join(' › '), reqs: reqTags(spec.title), status,
           flaky: t.status === 'flaky', ms: t.results.reduce((n, r) => n + (r.duration || 0), 0),
           error: stripAnsi((last.error && last.error.message) || '').split('\n').slice(0, 6).join('\n')
